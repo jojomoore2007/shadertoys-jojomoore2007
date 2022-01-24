@@ -1,0 +1,336 @@
+file1:
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    // Normalized pixel coordinates (from 0 to 1)
+    vec2 uv = fragCoord/iResolution.xy;
+
+    // Time varying pixel color
+    vec4 col = vec4(0.0,0.0,0.0,1.0);
+    float amul = 0.5;
+    float rmul = 2.0;
+    float n = 0.0;
+    float a = 1.0;
+    float r = 1.0;
+    for (int i = 0; i < 8; i++) {
+        vec2 xy = vec2(mod(r*uv.x,1.0),mod(r*uv.y,1.0));
+        col=col+(a*texture(iChannel0,xy));
+        n+=a;
+        a*=amul;
+        r*=rmul;
+    }
+
+    // Output to screen
+    fragColor = col/n;
+}
+
+
+#region VEXcode Generated Robot Configuration
+import math
+import random
+from vexcode import *
+
+drivetrain = Drivetrain()
+magnet = Electromagnet("magnet", 0)
+pen = Pen()
+brain = Brain()
+left_bumper = Bumper("leftBumper", 1)
+right_bumper = Bumper("rightBumper", 2)
+distance = Distance()
+front_eye = EyeSensor("fronteye", 3)
+down_eye = EyeSensor("downeye", 4)
+location = Location()
+
+#endregion VEXcode Generated Robot Configuration
+# ------------------------------------------
+# 
+# 	Project:      VEXcode Projects
+#	Author:       Joey Moore
+#	Created:      10/26/2021
+#	Description:  VEXcode Projects
+# 
+# ------------------------------------------
+
+# Imports:
+from vexcode import *
+import math
+import sys,os,asyncio
+
+DEBUG=False
+
+def log(x,*args):
+    global brain
+    if len(args):
+        x=x%args
+    brain.print(str(x))
+    brain.new_line()
+def dbg(x,*args):
+    if DEBUG:
+        log("DEBUG: "+str(x),*args)
+# Grid-style positioning relative to a point:
+class GridMove:
+    def __init__(self,usize=200,utype=MM,htype=DEGREES):
+        self.us=usize
+        self.ut=utype
+        self.x=0
+        self.y=0
+        self.h=0
+        self.ht=htype
+        self._speed=5.5
+        self.worldSense={}
+        drivetrain.set_drive_velocity(50,PERCENT)
+        drivetrain.set_turn_velocity(50,PERCENT)
+        if htype==DEGREES:
+            self.hm=360
+            self.hm2=180
+            self.hm4=90
+            self.cos=lambda x: math.cos(math.radians(x))
+            self.sin=lambda x: math.sin(math.radians(x))
+            self.atan2=lambda y,x: math.degrees(math.atan2(y,x))%self.hm
+        else:
+            self.hm=math.pi*2
+            self.hm2=math.pi
+            self.hm4=math.pi/2
+            self.cos=math.cos
+            self.sin=math.sin
+            self.atan2=lambda y,x: math.atan2(y,x)%hm
+        self.h=self.hm4
+    def sense(self): # Gets the value of every sensor; this can be used to map the world!
+        un=distance.found_object()                  # Ultrasonic visible
+        ud=distance.get_distance(self.ut)/self.us   # Ultrasonic distance
+        fn=front_eye.near_object()                  # Front near
+        fa=front_eye.brightness(PERCENT)            # Front brightness
+        fr=front_eye.detect(RED)                    # Front red
+        fg=front_eye.detect(GREEN)                  # Front green
+        fb=front_eye.detect(BLUE)                   # Front blue
+        fk=front_eye.detect(BLACK)                  # Front black
+        dn=down_eye.near_object()                   # Floor near
+        da=down_eye.brightness(PERCENT)             # Floor brightness
+        dr=down_eye.detect(RED)                     # Floor red
+        dg=down_eye.detect(GREEN)                   # Floor green
+        db=down_eye.detect(BLUE)                    # Floor blue
+        dk=down_eye.detect(BLACK)                   # Floor black
+        self.worldSense[(self.x,self.y,self.h)]=(un,ud,fn,(fa,fr,fg,fb,fk),dn,(da,dr,dg,db,dk),)
+    def fd(self,x):
+        global log,dbg
+        self.sense()
+        dbg("forwards %2f",x)
+        drivetrain.drive_for(FORWARD,x*self.us,self.ut)
+        self.x+=self.cos(self.h)*x
+        self.y+=self.sin(self.h)*x
+        self.sense()
+        return self
+    def bk(self,x):
+        global log,dbg
+        self.sense()
+        dbg("backwards %2f",x)
+        drivetrain.drive_for(REVERSE,x*self.us,self.ut)
+        self.x-=self.cos(self.h)*x
+        self.y-=self.sin(self.h)*x
+        self.sense()
+        return self
+    def rt(self,x):
+        global log,dbg
+        self.sense()
+        dbg("turn right %2f",x)
+        drivetrain.turn_for(RIGHT,x,self.ht)
+        self.h=(self.h-x)%self.hm
+        self.sense()
+        return self
+    def lt(self,x):
+        global log,dbg
+        self.sense()
+        dbg("turn left %2f",x)
+        drivetrain.turn_for(LEFT,x,self.ht)
+        self.h=(self.h+x)%self.hm
+        self.sense()
+        return self
+    def sRt(self,x):
+        global log,dbg
+        self.sense()
+        dbg("turn right %2f but faster",x)
+        self.h=(self.h+x)%self.hm
+        drivetrain.turn_to_heading(self.h,self.ht)
+        self.sense()
+        return self
+    def sLt(self,x):
+        global log,dbg
+        self.sense()
+        dbg("turn left %2f but faster",x,self.x,self.y)
+        self.h=(self.h-x)%self.hm
+        drivetrain.turn_to_heading(self.h,self.ht)
+        self.sense()
+        return self
+    def speed(self,x=None):
+        global log,dbg
+        self.sense()
+        if x==None:
+            dbg("speed is %2f",self._speed)
+            self.sense()
+            return self._speed
+        else:
+            dbg("set speed to %2f",x)
+            self._speed = x
+            x = x if 0.5<=x<=10 else 11
+            drivetrain.set_drive_velocity((x*100)//11,PERCENT)
+            drivetrain.set_turn_velocity((x*100)//11,PERCENT)
+            self.sense()
+            return self
+    def pendown(self):
+        global log,dbg
+        self.sense()
+        dbg("pen down")
+        pen.move(DOWN)
+        self.sense()
+        return self
+    def pd(self):
+        return self.pendown()
+    def down(self):
+        return self.pendown()
+    def penup(self):
+        global log,dbg
+        self.sense()
+        dbg("pen up")
+        pen.move(UP)
+        self.sense()
+        return self
+    def pu(self):
+        return self.penup()
+    def up(self):
+        return self.penup()
+    def goto(self,x,y):
+        global log,dbg
+        self.sense()
+        if (x!=self.x) or (y!=self.y):
+            dbg("goto %3f %3f from %3f %3f",x,y,self.x,self.y)
+            dh=self.atan2(y-self.y,x-self.x)-self.h
+            if dh>(self.hm/2):
+                dh-=self.hm
+            elif dh<(self.hm/-2):
+                dh+=self.hm
+            mv=math.sqrt(((x-self.x)**2)+((y-self.y)**2))
+            if not ((self.hm/-4)<dh<(self.hm/4)):
+                dh-=(self.hm2*dh/abs(dh))
+                mv=-mv
+            return self.lt(dh).fd(mv).rt(dh)
+        dbg("don't move!")
+        self.sense()
+        return self
+    def gotoFast(self,x,y):
+        global log,dbg
+        self.sense()
+        if (x!=self.x) or (y!=self.y):
+            dbg("goto %3f %3f fast from %3f %3f",x,y,self.x,self.y)
+            dh=self.atan2(y-self.y,x-self.x)-self.h
+            if dh>(self.hm/2):
+                dh-=self.hm
+            elif dh<(self.hm/-2):
+                dh+=self.hm
+            mv=math.sqrt(((x-self.x)**2)+((y-self.y)**2))
+            if not ((self.hm/-4)<dh<(self.hm/4)):
+                dh-=(self.hm2*dh/abs(dh))
+                mv=-mv
+            return self.lt(dh).fd(mv)
+        dbg("quickly, do nothing!")
+        self.sense()
+        return self
+    def setHeading(self,h):
+        global log,dbg
+        self.sense()
+        dh=h-self.h
+        if dh!=0:
+            dbg("turn to %3f",h)
+            if dh>(self.hm/2):
+                dh-=self.hm
+            elif dh<(self.hm/-2):
+                dh+=self.hm
+            return self.lt(dh)
+        dbg("dont turn")
+        self.sense()
+        return self
+class Challenges:
+    def __init__(self):# >:( no context support so we cant do ctx. mgmt.
+        self.t0=-1
+        self.t1=-1
+        self.n=""
+    def begin(self,challenge):
+        if self.t0>=0:
+            self.finish()
+        self.n=challenge
+        log("begin '%s'",challenge)
+        self.t0=brain.timer_time(SECONDS)
+    def finish(self):
+        self.t1=brain.timer_time(SECONDS)
+        log("finish '%s'; start @ %6f; end @ %6f; took %6f seconds",self.n,self.t0,self.t1,(self.t1-self.t0))
+        self.t0=-1
+        self.t1=-1
+        self.n=""
+gm=0
+# Our main function:
+def main():
+    global gm,gmws
+    global log,dbg
+    gm=GridMove(200)
+    gm.speed(0)
+    cc=Challenges()
+    gm.pu()
+    gm.gotoFast(-4.5,-4.5)
+    gm.setHeading(90)
+    cc.begin("Basketball Drills Level 1")
+    for n in range(4):
+        gm.fd(2**n)
+        gm.bk(2**n)
+    cc.finish()
+    return None
+    cc.begin("Basketball Drills Level 2")
+    for n in range(4):
+        gm.fd(2**n)
+        gm.rt(180)
+        gm.fd(2**n)
+        gm.rt(180)
+    cc.finish()
+    cc.begin("Basketball Drills Level 3")
+    for n in range(4):
+        pen.set_pen_color(BLACK.__class__[dir(BLACK.__class__)[3-n]])
+        gm.pd()
+        gm.fd(2**n)
+        gm.rt(180)
+        gm.fd(2**n)
+        gm.pu()
+        gm.lt(90)
+        gm.fd(1.5)
+        gm.lt(90)
+    cc.finish()
+    # We have to setup the Art Canvas initial position and rotation
+    gm.pu()
+    gm.gotoFast(0,0)
+    gm.setHeading(90)
+    cc.begin("Build a House")
+    gm.pu()
+    gm.gotoFast(-1,1)
+    gm.pd()
+    gm.gotoFast(1,1)
+    gm.gotoFast(1,-1)
+    gm.gotoFast(-1,-1)
+    gm.gotoFast(-1,1)
+    gm.gotoFast(0,2)
+    gm.gotoFast(1,1)
+    gm.gotoFast(1,0.5)
+    gm.gotoFast(3,0.5)
+    gm.gotoFast(3,-1)
+    gm.gotoFast(1,-1)
+    gm.gotoFast(1,1/6)
+    gm.setHeading(0)
+    gm.fd(0.5)
+    for i in range(3):
+        gm.lt(90)
+        gm.fd(2/6)
+        gm.bk(2/6)
+        gm.rt(90)
+        gm.fd(0.5)
+    gm.pu()
+    gm.gotoFast(0,0)
+    gm.setHeading(90)
+    cc.finish()
+# Run our main loop alongside VEXcode VR's simulator
+vr_thread(main())
