@@ -110,13 +110,15 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     float mbMix = fnoise(uvt+1.0)/2.0;
     float star0 = fnoise(uvt*12.0);
     float star1 = fnoise(uvt*6.0+star0);
-    float star2 = fnoise(uvt/12.0);
-    float star3 = fnoise((uvt/6.0)+star2);
+    float star2 = fnoise(uvt+star1);
+    float star3 = fnoise((uvt/12.0));
+    float star4 = fnoise((uvt/6.0)+star3);
+    float star5 = fnoise(uvt+star4);
     vec3 cPurple = vec3(1.0/3.0,0.0,0.5);
     vec3 cRed = vec3(1.0,0.0,0.5);
     vec3 cBlue = vec3(0.0,0.0,0.5);
     vec3 cStar = vec3(0.875,0.875,1.0);
-    vec3 col = mix(mix(mix(cPurple,cRed,prMix),cBlue,mbMix),cStar,star0*star1*star2*star3);
+    vec3 col = mix(mix(mix(cPurple,cRed,prMix),cBlue,mbMix),cStar,star0*star1*star2*star3*2.0);
     col*=gaussian(uv.xy,vec2(0.5,0.5));
     
     // Output to screen
