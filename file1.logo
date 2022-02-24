@@ -1,0 +1,28 @@
+clearscreen
+
+to poly :len :sides
+  repeat :sides [
+    fd :len
+    rt 360/:sides
+  ]
+end
+
+to polyf :len :sides :mlen :depth
+  ifelse [:depth > 0] [
+    repeat :sides [
+      fd :len
+      lt 180-(360/:sides)
+      polyf :len*:mlen :sides :mlen :depth-1
+      rt 180
+    ]
+  ] [
+    repeat :sides [
+      fd :len
+      rt 360/:sides
+    ]
+  ]
+end
+setxy -100 -40
+clean
+setpensize 1/256
+polyf 10 3 31.9/32 9
