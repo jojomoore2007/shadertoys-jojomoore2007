@@ -1,0 +1,55 @@
+#define HALFPI acos(0.0)
+#define     PI atan(0.0,-1.0)
+#define    TAU 2.0*PI
+
+#define bTint  5.0
+#define bShade 4.0
+#define bNorm  3.0
+
+
+#define CTINT  pow(0.5,bTint)
+#define CSHADE pow(0.5,bShade)
+#define CNORM  pow(0.5,bNorm)
+
+#define CTROUND CTINT/2.0
+#define CSROUND CSHADE/2.0
+#define CNROUND CNORM/2.0
+vec4 pow4(float x, vec4 y) {
+    return vec4(pow(x,y.x),pow(x,y.y),pow(x,y.z),pow(x,y.w));
+}
+vec4 norm(vec4 x, vec4 fb) {
+    float nx = x.x;
+    float ny = x.y;
+    float nz = x.z;
+    float na = x.a;
+    if (isnan(nx))
+        nx=fb.x;
+    if (isnan(ny))
+        ny=fb.y;
+    if (isnan(nz))
+        nz=fb.z;
+    if (isnan(na))
+        na=fb.a;
+    return vec4(nx,ny,nz,na);
+}
+void mainImage(out vec4 fragColor,in vec2 fragCoord) {
+    vec2 uv = fragCoord/iResolution.xy;
+    uv=vec2(1.0,0.0)+vec2(-1.0,1.0)*uv;
+    vec4 fc=texture(iChannel0,uv);
+    // get color metrics so we can compress stuff:
+    float rgbMax = max(fc.r,max(fc.g,fc.b));
+    float rgbMin = min(fc.r,min(fc.g,fc.b));
+    float rgbRange = rgbMax-rgbMin;
+    vec3 rgbNorm = (fc.rgb-rgbMin)/rgbMax;
+    float tint = (1.0-rgbMax);
+    float shade = rgbMin/rgbMax;
+    tint=tint+CTROUND-mod(tint+CTROUND,CTINT);
+    shade=shade+CSROUND-mod(shade+CSROUND,CSHADE);
+    rgbNorm+=CNROUND-mod(rgbNorm+CNROUND,CNORM);
+    //fragColor=vec4(rgbNorm,1.0);
+    vec4 oldc = texture(iChannel1,vec2(1.0-uv.x,uv.y));
+    fc=vec4((rgbNorm+shade)*(1.0)*(1.0-tint),1.0);
+    fc=norm(norm(norm(mix(norm(oldc,fc),fc,0.1),mix(norm(oldc,fc),fc,0.01)),oldc),vec4(0.5));
+    fragColor=fc;
+    //fragColor=floor(fragColor/PREC)*PREC;
+}
