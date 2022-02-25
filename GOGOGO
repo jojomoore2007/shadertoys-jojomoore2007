@@ -1,3 +1,40 @@
+//bufa
+const int keysX[10] = int[10](
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57
+);
+const int keysY[10] = int[10](
+    81,
+    87,
+    69,
+    82,
+    84,
+    89,
+    85,
+    73,
+    79,
+    80
+);
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vec2 uv=fragCoord/iResolution.xy;
+    float x=0.0;
+    float y=0.0;
+    for (int i = 0;i<10;i++) {
+        x=(x*2.0)+float(texture(iChannel0,vec2(float(keysX[i]),0.75)).x);
+        y=(x*2.0)+float(texture(iChannel0,vec2(float(keysY[i]),0.75)).x);
+    }
+    fragColor = vec4(x,y,1.0,1.0);//vec4(distance(vec2(float(x),float(y)),uv));
+}
+
 #define FQUALITY 10.0
 #define FPMULT   2.0
 #define FPBASE   2.0
