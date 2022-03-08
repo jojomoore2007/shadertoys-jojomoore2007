@@ -35,7 +35,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             z = xy+vec2(cos(h.w),sin(h.w))*0.01;
             d = lineDist(xy,z,uv);
         }
-        if (d<=pow(2.0,-8.0)) {col+=0.00001;}
+        if (d==0.0) {col+=0.00001;}
         d=0.0;
     }
     fragColor = vec4(col,col,col,1.0);
