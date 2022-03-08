@@ -1,0 +1,40 @@
+cs
+setpensize 0.005
+setbg "#ffffff
+setpalette  8 "#bf005f03 ;"#ff007f03
+setpalette  9 "#bf008f06 ;"#ff00bf06
+setpalette 10 "#00000002 ;"#00000002
+setpalette 11 "#bf00bf08 ;"#ff00ff08
+setpalette 12 "#bf00bf08 ;"#ff00ff08
+setpalette 13 "#ffffff02 ;"#ffffff02
+setpalette 14 "#8f00bf06 ;"#bf00ff06
+setpalette 15 "#5f00bf02 ;"#7f00ff02
+ht
+for [a 3 0 -0.001] [
+  pu
+  setpensize :a/2
+  home
+  pd
+  for [i 1 8] [
+    pu
+    setpencolor 16-:i
+    make "x1 100+:i+:a
+    make "x2 100+:i+:a
+    make "x3 100+:i+:a
+    for [j 1 100] [
+      fd 10
+      rt :x3
+      make "x3 (:x3+:x2)%360
+      make "x2 (:x2+:x1)
+      make "x1 (:x1+0.01)
+    ]
+    pd
+    for [j 1 100+(:i*100)] [
+      fd 10
+      rt :x3
+      make "x3 (:x3+:x2)%360
+      make "x2 (:x2+:x1)
+      make "x1 (:x1+0.01)
+    ]
+  ]
+]
