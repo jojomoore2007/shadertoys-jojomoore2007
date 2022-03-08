@@ -25,16 +25,17 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec2 xy = vec2(0.0,0.0);
     vec4 h = vec4(0.1,0.0,0.0,0.0);
     float d=1.0;
-    vec2 z;
-    for (int i = 0; i < 32768; i++) {
+    vec2 z = vec2(0.0,0.0);
+    int i = 0;
+    for (i = 0; i < 32768; i++) {
         for (;(i<32768)&&(d>0.0078125);i++) {
-            z = xy+vec2(cos(h.w),sin(h.w))*0.01;
-            d = lineDist(xy,z,uv);
             xy=mod(z,1.0);//vec2(cos(h.w),sin(h.w));
             h.yzw+=h.xyz;
             h.w%=TAU;
+            z = xy+vec2(cos(h.w),sin(h.w))*0.01;
+            d = lineDist(xy,z,uv);
         }
-        if (d<=0.0078125) {col+=0.0078125;}
+        if (d<=0.0078125) {col+=0.00001;}
     }
     fragColor = vec4(col,col,col,1.0);
 }
