@@ -36,6 +36,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             d = lineDist(xy,z,uv);
         }
         if (d<=0.0078125) {col+=0.00001;}
+        d=0.0;
     }
     fragColor = vec4(col,col,col,1.0);
 }
